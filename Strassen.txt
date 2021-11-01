@@ -1,0 +1,109 @@
+#include<iostream>
+#include<vector>
+using namespace std;
+using vvi=vector<vector<int>>;
+using vi=vector<int>;
+int COUNT = 0;
+void pr(vvi& A) { // pr - print
+	for (auto& row : A) {
+		for (auto& item : row) {
+			cout << item << " ";
+		}
+		cout << endl;
+	}
+	return;
+}
+vvi add(vvi& A, vvi& B) {
+	int len = A[0].size();
+	vvi ans(len, vi(len));
+	for (int i = 0; i < len; i++) {
+		for (int j = 0; j < len; j++) {
+			ans[i][j] = A[i][j] + B[i][j];
+		}
+	}
+	return ans;
+}
+vvi rev(vvi& A) { // rev - reverse
+	int len = A[0].size();
+	vvi ans(len, vi(len));
+	for (int i = 0; i < len; i++) {
+		for (int j = 0; j < len; j++) {
+			ans[i][j] = -A[i][j];
+		}
+	}
+	return ans;
+}
+vvi mer(vvi& A00, vvi& A01, vvi& A10, vvi& A11) {//mer - merge
+	int len = A00[0].size();
+	vvi ans(2 * len, vi(2 * len));
+	for (int i = 0; i < len; i++) {
+		for (int j = 0; j < len; j++) {
+			ans[i][j] = A00[i][j];
+		}
+	}
+	for (int i = 0; i < len; i++) {
+		for (int j = len; j < len + len; j++) {
+			ans[i][j] = A01[i][j - len];
+		}
+	}
+	for (int i = len; i < len + len; i++) {
+		for (int j = 0; j < len; j++) {
+			ans[i][j] = A10[i - len][j];
+		}
+	}
+	for (int i = len; i < len + len; i++) {
+		for (int j = len; j < len + len; j++) {
+			ans[i][j] = A11[i - len][j - len];
+		}
+	}
+	return ans;
+}
+vvi split(vvi& A, int pos) {
+	int len = A[0].size();
+	vvi ans(len / 2, vi(len / 2));
+	int x_begin = (pos / 2) * (len / 2);
+	int y_begin = (pos & 1) * (len / 2);
+	for (int i = x_begin; i < x_begin + len / 2; i++) {
+		for (int j = y_begin; j < y_begin + len / 2; j++) {
+			ans[i - x_begin][j - y_begin] = A[i][j];
+		}
+	}
+	return ans;
+}
+vvi Strassen(vvi A, vvi B) {
+	int len = A[0].size();
+	// cout << len << endl;
+	if (len == 1) {
+		COUNT++;
+		int ans = A[0][0] * B[0][0];
+		return { {ans} };
+	}
+	vvi A00 = split(A, 0);
+	vvi A01 = split(A, 1);
+	vvi A10 = split(A, 2);
+	vvi A11 = split(A, 3);
+	vvi B00 = split(B, 0);
+	vvi B01 = split(B, 1);
+	vvi B10 = split(B, 2);
+	vvi B11 = split(B, 3);
+	vvi M1 = Strassen(add(A00, A11), add(B00, B11));
+	vvi M2 = Strassen(add(A10, A11), B00);
+	vvi M3 = Strassen(A00, add(B01, rev(B11)));
+	vvi M4 = Strassen(A11, add(B10, rev(B00)));
+	vvi M5 = Strassen(add(A00, A01), B11);
+	vvi M6 = Strassen(add(A10, rev(A00)), add(B00, B01));
+	vvi M7 = Strassen(add(A01, rev(A11)), add(B10, B11));
+	vvi C00 = add(add(M1, M4), add(rev(M5), M7));
+	vvi C01 = add(M3, M5);
+	vvi C10 = add(M2, M4);
+	vvi C11 = add(add(M1, rev(M2)), add(M3, M6));
+	return mer(C00, C01, C10, C11);
+}
+int main() {
+	vvi A = { {1,2,3,4},{2,3,4,1},{3,4,1,2},{4,1,2,3} };
+	vvi B = { {4,3,2,1},{3,2,1,4},{2,1,4,3},{1,4,3,2} };
+	vvi C = Strassen(A, B);
+	pr(C);
+	cout << "mul time:" << COUNT << endl;
+}
+
